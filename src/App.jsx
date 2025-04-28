@@ -1,18 +1,43 @@
 import { useState } from 'react'
 import './App.css'
+import { SUPABASE } from './config'
 
 function App() {
   const [pixelUrl, setPixelUrl] = useState('')
-
-  const generatePixel = () => {
-    const id = Date.now().toString(36) + Math.random().toString(36).substring(2,5)
-    const url = `https://your-backend-com/track?id=${id}`
-    setPixelUrl(
-      `<img src="${url}" width="1" height="1" style="display:none;" />`
-    )
-    chrome.storage.local.set(
-      {[id]: {createdAt: Date.now(), opened:false}}
-    )
+  const [isError, setIsError] = useState(false)
+  const [formData, setFormData] = useState({
+    email: '',
+    recipient: ''
+  })
+  const disabled = formData.email.trim() === '' || formData.recipient.trim() === ''
+  const generatePixel = async () => {
+    const {email, recipient} = formData
+    try {
+      const response = await fetch (`${SUPABASE.URL}/functions/v1/create-pixel`, {
+        method: 'POST',
+        headers: {
+          'content-Type': 'application/json',
+          'Authorization': `${SUPABASE.AUTH}`
+        },
+        body: JSON.stringify({email_title: email, recipient: recipient})
+      })
+      const data = await response.json()
+      if(response.ok){
+        // setPixelUrl(data.pixelUrl)
+        setPixelUrl(
+          `<img src="${data.pixelUrl}" width="1" height="1" style="display:none; visibility:hidden;" alt="" />`
+        );
+       
+      } else{
+        console.error(data)
+        setIsError(true)
+      }
+    } catch (error) {
+      console.log(error)
+      setIsError(true)
+      
+    }
+   
   }
 
   const copyPixel = () => {
@@ -23,7 +48,11 @@ function App() {
   return (
    <div>
     <h1>Email Tracker</h1>
-    <button onClick={generatePixel}>Generate Tracking Pixel</button>
+    <form>
+      <input type="email" placeholder='Enter recipient email' value={formData.email} onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))} />
+      <input type="text" placeholder='Enter email title' value={formData.recipient} onChange={(e) => setFormData(prev => ({...prev, recipient: e.target.value}))} />
+    </form>
+    <button disabled={disabled} onClick={generatePixel}>Generate Tracking Pixel</button>
   
   {pixelUrl && (
     <div>

@@ -1,1 +1,2 @@
 - manifest.json | default_icon?
+- create-url / change access control header to only this deployed
