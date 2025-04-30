@@ -4,6 +4,16 @@
     "description": "Track email opens with tracking pixels.",
     "version": "1.0",
     "permissions": ["storage", "activeTab", "scripting"],
+    "host_permissions": [
+      "https://mail.google.com/*",
+      "https://your-supabase-url.supabase.co/*"
+    ],
+    "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["contentScript.js"]
+    }
+  ],
     "action": {
       "default_popup": "index.html",
       "default_icon": {
